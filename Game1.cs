@@ -17,9 +17,15 @@ namespace GameProgII_2DGame_Julia_C02032025
     /// </summary>
     public class Game1 : Game
     {
+        // Match current authored gameplay space: 25x15 tiles at 32px each.
+        private const int VirtualWidth = 800;
+        private const int VirtualHeight = 480;
+
         // ---------- REFERENCES ---------- //
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
+        private Matrix _scaleMatrix = Matrix.Identity;
+        private Matrix _inverseScaleMatrix = Matrix.Identity;
 
         public static Game1 instance;
         public Game1()
@@ -28,12 +34,16 @@ namespace GameProgII_2DGame_Julia_C02032025
             Content.RootDirectory = "Content";            
             IsMouseVisible = true;
             instance = this;
+            Window.AllowUserResizing = true;
+            Window.ClientSizeChanged += OnClientSizeChanged;
         }
 
         protected override void Initialize()
         {
-            _graphics.PreferredBackBufferWidth = 1280; _graphics.PreferredBackBufferHeight = 720;
+            _graphics.PreferredBackBufferWidth = VirtualWidth;
+            _graphics.PreferredBackBufferHeight = VirtualHeight;
             _graphics.ApplyChanges();
+            UpdateScaleMatrices();
 
             Globals.GameInstance = this;
 
@@ -77,11 +87,8 @@ namespace GameProgII_2DGame_Julia_C02032025
             // ***** HUD ***** //
             GameObject hudObj = new GameObject();
             GameHUD hud = new GameHUD();
-            Sprite hudSprite = new Sprite();
 
             hudObj.AddComponent(hud);
-            hudObj.AddComponent(hudSprite);
-            hudSprite.LoadSprite("emptyInvTexture");
 
             Globals.Instance._gameHUD = hud;
             Globals.Instance._scene.AddGameObject(hudObj);
@@ -108,15 +115,22 @@ namespace GameProgII_2DGame_Julia_C02032025
         {
             GraphicsDevice.Clear(Color.Black);
 
-            Globals.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+            Globals.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                depthStencilState: null,
+                rasterizerState: null,
+                effect: null,
+                transformMatrix: _scaleMatrix);
 
             // Draw all scene objects (including all GameObjects & thier Components)
             Globals.Instance._scene.Draw(Globals.spriteBatch);
             
             Globals.Instance._gameHUD.DrawInventoryHUD(); // draw inventory slots HUD
-            Vector2 levelPos = new Vector2(640, 10);
+            Vector2 levelPos = new Vector2(VirtualWidth - 120, 10);
             Globals.Instance._gameHUD.DrawLevelFont(levelPos); // level number
-            Vector2 healthPos = new Vector2(640, 700);
+            Vector2 healthPos = new Vector2(VirtualWidth * 0.5f - 80f, VirtualHeight - 20f);
             Globals.Instance._gameHUD.DrawHealth(healthPos); // player health
 
             // Drawing Menus
@@ -133,6 +147,33 @@ namespace GameProgII_2DGame_Julia_C02032025
 
             Globals.spriteBatch.End();
             base.Draw(gameTime);
+        }
+
+        public Vector2 ScreenToVirtual(Vector2 screenPosition)
+        {
+            return Vector2.Transform(screenPosition, _inverseScaleMatrix);
+        }
+
+        private void OnClientSizeChanged(object sender, EventArgs e)
+        {
+            if (Window.ClientBounds.Width <= 0 || Window.ClientBounds.Height <= 0)
+            {
+                return;
+            }
+
+            _graphics.PreferredBackBufferWidth = Window.ClientBounds.Width;
+            _graphics.PreferredBackBufferHeight = Window.ClientBounds.Height;
+            _graphics.ApplyChanges();
+            UpdateScaleMatrices();
+        }
+
+        private void UpdateScaleMatrices()
+        {
+            float scaleX = _graphics.PreferredBackBufferWidth / (float)VirtualWidth;
+            float scaleY = _graphics.PreferredBackBufferHeight / (float)VirtualHeight;
+
+            _scaleMatrix = Matrix.CreateScale(scaleX, scaleY, 1f);
+            _inverseScaleMatrix = Matrix.Invert(_scaleMatrix);
         }
 
         #region adding gameobjects & components

@@ -255,7 +255,7 @@ namespace GameProgII_2DGame_Julia_C02032025.Components
                 if (playButtonActive)
                 {
                     MouseState mouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
-                    Vector2 mousePos = new Vector2(mouseState.X, mouseState.Y);
+                    Vector2 mousePos = GetVirtualMousePosition(mouseState);
 
                     if (playButtonBounds.Contains(mousePos) && mouseState.LeftButton == ButtonState.Pressed)
                     {
@@ -270,7 +270,7 @@ namespace GameProgII_2DGame_Julia_C02032025.Components
                 if (quitButtonActive)
                 {
                     MouseState mouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
-                    Vector2 mousePos = new Vector2(mouseState.X, mouseState.Y);
+                    Vector2 mousePos = GetVirtualMousePosition(mouseState);
 
                     if (quitButtonBounds.Contains(mousePos) && mouseState.LeftButton == ButtonState.Pressed)
                     {
@@ -294,7 +294,7 @@ namespace GameProgII_2DGame_Julia_C02032025.Components
                 Vector2 quitButtonPos = new Vector2(quitButtonBounds.X, quitButtonBounds.Y);
 
                 MouseState mouseState = Mouse.GetState();
-                Vector2 mousePos = new Vector2(mouseState.X, mouseState.Y);
+                Vector2 mousePos = GetVirtualMousePosition(mouseState);
 
                 if (playButtonBounds.Contains(mousePos) && mouseState.LeftButton == ButtonState.Pressed)
                     Globals.spriteBatch.Draw(pressedButton, playButtonPos, Color.White);
@@ -318,7 +318,7 @@ namespace GameProgII_2DGame_Julia_C02032025.Components
                 Vector2 quitButtonPos = new Vector2(quitButtonBounds.X, quitButtonBounds.Y);
 
                 MouseState mouseState = Mouse.GetState();
-                Vector2 mousePos = new Vector2(mouseState.X, mouseState.Y);
+                Vector2 mousePos = GetVirtualMousePosition(mouseState);
 
                 if (playButtonBounds.Contains(mousePos) && mouseState.LeftButton == ButtonState.Pressed)
                     Globals.spriteBatch.Draw(pressedButton, playButtonPos, Color.White);
@@ -343,7 +343,7 @@ namespace GameProgII_2DGame_Julia_C02032025.Components
         private void HandleButtonInteractions()
         {
             MouseState mouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
-            Vector2 mousePos = new Vector2(mouseState.X, mouseState.Y);
+            Vector2 mousePos = GetVirtualMousePosition(mouseState);
             bool isLeftButtonPressed = mouseState.LeftButton == ButtonState.Pressed;
             bool isLeftButtonReleased = mouseState.LeftButton == ButtonState.Released;
 
@@ -436,6 +436,16 @@ namespace GameProgII_2DGame_Julia_C02032025.Components
                     }
                 }
             }
+        }
+
+        private Vector2 GetVirtualMousePosition(MouseState mouseState)
+        {
+            if (Globals.GameInstance is Game1 game)
+            {
+                return game.ScreenToVirtual(new Vector2(mouseState.X, mouseState.Y));
+            }
+
+            return new Vector2(mouseState.X, mouseState.Y);
         }
     }
 }
